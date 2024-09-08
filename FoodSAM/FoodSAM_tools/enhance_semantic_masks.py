@@ -93,6 +93,11 @@ def enhance_masks(data_folder, category_txt, color_list_path, num_class=104, are
         pred_mask_path = os.path.join(data_folder, img_folder, pred_mask_file_name)
         img_path = os.path.join(data_folder, img_folder, 'input.jpg')
         save_dir = os.path.join(data_folder, img_folder)
+           # Check if save_dir is a file, and if so, create a unique directory name
+        suffix = 1
+        while os.path.isfile(save_dir):
+            save_dir = os.path.join(data_folder, f"{img_folder}_enhanced_{suffix}")
+            suffix += 1
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, enhance_mask_name)
         vis_save_path = os.path.join(save_dir, enhance_mask_vis_name)

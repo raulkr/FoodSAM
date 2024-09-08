@@ -15,6 +15,11 @@ import shutil, logging
 from FoodSAM_tools.predict_semantic_mask import semantic_predict
 from FoodSAM_tools.enhance_semantic_masks import enhance_masks
 from FoodSAM_tools.evaluate_foodseg103 import evaluate
+import torch
+from mmcv.cnn import ConvModule
+from mmcv.utils.parrots_wrapper import SyncBatchNorm
+from FoodSAM_tools.utils import convert_sync_batchnorm
+  # This will force CPU usage
 
 parser = argparse.ArgumentParser(
     description=(
@@ -267,6 +272,7 @@ def main(args: argparse.Namespace) -> None:
     os.makedirs(args.output, exist_ok=True)
     logger = create_logger(args.output)
     logger.info("running sam!")
+    args.device = 'cpu' 
     sam = sam_model_registry[args.model_type](checkpoint=args.SAM_checkpoint)
     _ = sam.to(device=args.device)
     output_mode = "binary_mask"

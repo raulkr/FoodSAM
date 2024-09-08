@@ -13,6 +13,9 @@ from detectron2.data import MetadataCatalog
 from detectron2.engine.defaults import DefaultPredictor
 from detectron2.utils.video_visualizer import VideoVisualizer
 from detectron2.utils.visualizer import ColorMode, Visualizer
+from FoodSAM_tools.utils import convert_sync_batchnorm
+
+
 
 
 class UnifiedVisualizationDemo(object):
@@ -34,11 +37,18 @@ class UnifiedVisualizationDemo(object):
 
         self.parallel = parallel
         if parallel:
-            num_gpu = torch.cuda.device_count()
+            num_gpu = 0  
+            # num_gpu = torch.cuda.device_count()
             self.predictor = AsyncPredictor(cfg, num_gpus=num_gpu)
         else:
             self.predictor = DefaultPredictor(cfg)
+        
+        self.predictor.model = convert_sync_batchnorm(self.predictor.model)
 
+        for param in self.predictor.model.parameters():
+            param.data = param.data.cpu()
+
+        self.predictor.model.eval()
     def run_on_image(self, image):
         """
         Args:
@@ -168,17 +178,18 @@ class AsyncPredictor:
             cfg (CfgNode):
             num_gpus (int): if 0, will run on CPU
         """
-        num_workers = max(num_gpus, 1)
+        # num_workers = max(num_gpus, 1)
+        num_workers = 1  # Use only one worker for CPU
         self.task_queue = mp.Queue(maxsize=num_workers * 3)
         self.result_queue = mp.Queue(maxsize=num_workers * 3)
         self.procs = []
-        for gpuid in range(max(num_gpus, 1)):
-            cfg = cfg.clone()
-            cfg.defrost()
-            cfg.MODEL.DEVICE = "cuda:{}".format(gpuid) if num_gpus > 0 else "cpu"
-            self.procs.append(
-                AsyncPredictor._PredictWorker(cfg, self.task_queue, self.result_queue)
-            )
+    
+        cfg = cfg.clone()
+        cfg.defrost()
+        cfg.MODEL.DEVICE = "cpu"
+        self.procs.append(
+            AsyncPredictor._PredictWorker(cfg, self.task_queue, self.result_queue)
+    )
 
         self.put_idx = 0
         self.get_idx = 0
@@ -188,6 +199,7 @@ class AsyncPredictor:
         for p in self.procs:
             p.start()
         atexit.register(self.shutdown)
+
 
     def put(self, image):
         self.put_idx += 1

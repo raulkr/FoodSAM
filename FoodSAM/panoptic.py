@@ -15,6 +15,12 @@ import shutil, logging
 from FoodSAM_tools.panoramic_segment import panoramic_segment
 from FoodSAM_tools.object_detection import object_detect
 from FoodSAM_tools.predict_semantic_mask import semantic_predict
+import torch
+torch.cuda.is_available = lambda : False
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+torch.set_default_tensor_type('torch.FloatTensor')
+
+
 
 parser = argparse.ArgumentParser(
     description=(
@@ -275,6 +281,7 @@ def create_logger(save_folder):
     return logger
 
 def main(args: argparse.Namespace) -> None:
+    args.device = 'cpu'
     print(args)
     os.makedirs(args.output, exist_ok=True)
     logger = create_logger(args.output)

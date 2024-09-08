@@ -1,0 +1,44 @@
+[2024-09-08 14:24:30,657] [semantic.py:274] [INFO] running sam!
+[2024-09-08 14:24:42,592] [semantic.py:293] [INFO] Processing '/FoodSAM/test-image.png'...
+[2024-09-08 14:27:53,681] [semantic.py:306] [INFO] sam done!
+
+[2024-09-08 14:27:53,682] [semantic.py:309] [INFO] running semantic seg model!
+[2024-09-08 14:29:02,611] [semantic.py:311] [INFO] semantic predict done!
+
+[2024-09-08 14:29:02,613] [semantic.py:314] [INFO] enhance semantic masks
+[2024-09-08 14:29:02,760] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/0 assign label: [ 0, background, 1.00, 0.6082 ]
+[2024-09-08 14:29:02,762] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/1 assign label: [ 67, pie, 0.87, 0.0191 ]
+[2024-09-08 14:29:02,768] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/2 assign label: [ 67, pie, 1.00, 0.0458 ]
+[2024-09-08 14:29:02,770] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/3 assign label: [ 67, pie, 0.61, 0.0195 ]
+[2024-09-08 14:29:02,774] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/4 assign label: [ 67, pie, 0.74, 0.0387 ]
+[2024-09-08 14:29:02,776] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/5 assign label: [ 52, sauce, 0.76, 0.0156 ]
+[2024-09-08 14:29:02,780] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/6 assign label: [ 67, pie, 1.00, 0.0458 ]
+[2024-09-08 14:29:02,786] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/7 assign label: [ 66, rice, 0.63, 0.0557 ]
+[2024-09-08 14:29:02,787] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/8 assign label: [ 0, background, 0.76, 0.0195 ]
+[2024-09-08 14:29:02,789] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/9 assign label: [ 0, background, 0.46, 0.0162 ]
+[2024-09-08 14:29:02,791] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/10 assign label: [ 8, ice cream, 0.83, 0.0190 ]
+[2024-09-08 14:29:02,793] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/11 assign label: [ 0, background, 0.71, 0.0179 ]
+[2024-09-08 14:29:02,794] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/12 assign label: [ 0, background, 0.91, 0.0186 ]
+[2024-09-08 14:29:02,801] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/13 assign label: [ 66, rice, 0.51, 0.0691 ]
+[2024-09-08 14:29:02,808] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/14 assign label: [ 66, rice, 0.51, 0.0691 ]
+[2024-09-08 14:29:02,815] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/15 assign label: [ 66, rice, 0.51, 0.0691 ]
+[2024-09-08 14:29:02,816] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/16 assign label: [ 44, orange, 0.37, 0.0024 ]
+[2024-09-08 14:29:02,818] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/17 assign label: [ 52, sauce, 0.62, 0.0194 ]
+[2024-09-08 14:29:02,818] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/18 assign label: [ 8, ice cream, 1.00, 0.0009 ]
+[2024-09-08 14:29:02,819] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/19 assign label: [ 0, background, 1.00, 0.0006 ]
+[2024-09-08 14:29:02,819] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/20 assign label: [ 52, sauce, 0.82, 0.0020 ]
+[2024-09-08 14:29:02,820] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/21 assign label: [ 52, sauce, 1.00, 0.0012 ]
+[2024-09-08 14:29:02,820] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/22 assign label: [ 76, spring onion, 0.72, 0.0011 ]
+[2024-09-08 14:29:02,820] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/23 assign label: [ 0, background, 0.93, 0.0010 ]
+[2024-09-08 14:29:02,821] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/24 assign label: [ 76, spring onion, 0.94, 0.0015 ]
+[2024-09-08 14:29:02,821] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/25 assign label: [ 0, background, 0.79, 0.0006 ]
+[2024-09-08 14:29:02,822] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/26 assign label: [ 58, bread, 0.59, 0.0006 ]
+[2024-09-08 14:29:02,822] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/27 assign label: [ 0, background, 0.91, 0.0006 ]
+[2024-09-08 14:29:02,823] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/28 assign label: [ 44, orange, 0.50, 0.0009 ]
+[2024-09-08 14:29:02,823] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/29 assign label: [ 0, background, 1.00, 0.0006 ]
+[2024-09-08 14:29:02,823] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/30 assign label: [ 0, background, 1.00, 0.0003 ]
+[2024-09-08 14:29:02,824] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/31 assign label: [ 44, orange, 0.81, 0.0019 ]
+[2024-09-08 14:29:02,824] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/32 assign label: [ 0, background, 1.00, 0.0005 ]
+[2024-09-08 14:29:02,824] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/33 assign label: [ 0, background, 1.00, 0.0002 ]
+[2024-09-08 14:29:02,825] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/34 assign label: [ 52, sauce, 0.89, 0.0033 ]
+[2024-09-08 14:29:02,827] [enhance_semantic_masks.py:28] [INFO] /FoodSAM/test-image/sam_mask/35 assign label: [ 52, sauce, 0.61, 0.0196 ]

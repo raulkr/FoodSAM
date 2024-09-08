@@ -13,6 +13,8 @@ from mmcv.runner import load_checkpoint
 from mmseg.apis import  inference_segmentor, init_segmentor
 from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
+from FoodSAM_tools.utils import convert_sync_batchnorm
+torch.set_default_tensor_type('torch.FloatTensor')
 def save_result(img_path,
                 result,
                 color_list_path,
@@ -158,65 +160,53 @@ def single_gpu_test(model,
     return results
 
 
-def semantic_predict(data_root, img_dir, ann_dir, config, options, aug_test,  checkpoint, eval_options, output, color_list_path, 
+def semantic_predict(data_root, img_dir, ann_dir, config, options, aug_test, checkpoint, eval_options, output, color_list_path, 
                      img_path=None):
     cfg = mmcv.Config.fromfile(config)
     if options is not None:
         cfg.merge_from_dict(options)
+    
     # set cudnn_benchmark
     if cfg.get('cudnn_benchmark', False):
         torch.backends.cudnn.benchmark = True
+
     if aug_test:
-        # hard code index
-        cfg.data.test.pipeline[1].img_ratios = [
-            0.5, 0.75, 1.0, 1.25, 1.5, 1.75
-        ]
+        cfg.data.test.pipeline[1].img_ratios = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75]
         cfg.data.test.pipeline[1].flip = True
+    
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
 
+    # Use CPU device explicitly
+    device = torch.device('cpu')
 
-    #test only one image
+    # test only one image
     if img_path:
-        model = init_segmentor(config, checkpoint)
-        checkpoint = load_checkpoint(model, checkpoint, map_location='cpu')
+        model = init_segmentor(config, checkpoint, device='cpu')
+        checkpoint = load_checkpoint(model, checkpoint, map_location=device)  # Use CPU here
+        model = model.to(device)  # Ensure model is on CPU
+        model = convert_sync_batchnorm(model)
         result = inference_segmentor(model, img_path)
         output_dir = os.path.join(output, os.path.basename(img_path).split('.')[0])
-        save_result(
-                    img_path,
-                    result,
-                    color_list_path=color_list_path,
-                    show=False,
-                    out_file=output_dir)
+        save_result(img_path, result, color_list_path=color_list_path, show=False, out_file=output_dir)
 
     else:
         # build the model and load checkpoint
         cfg.model.train_cfg = None
         model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
-        checkpoint = load_checkpoint(model,checkpoint, map_location='cpu')
+        checkpoint = load_checkpoint(model, checkpoint, map_location=device)  # Ensure it's loaded on CPU
+        model = model.to(device)  # Ensure the model is moved to CPU
+
         # build the dataloader
         cfg.data.test.data_root = data_root
         cfg.data.test.img_dir = img_dir
         cfg.data.test.ann_dir = ann_dir
         dataset = build_dataset(cfg.data.test)
-        data_loader = build_dataloader(
-            dataset,
-            samples_per_gpu=1,
-            workers_per_gpu=cfg.data.workers_per_gpu,
-            dist=False,
-            shuffle=False)
+        data_loader = build_dataloader(dataset, samples_per_gpu=1, workers_per_gpu=cfg.data.workers_per_gpu, dist=False, shuffle=False)
 
         efficient_test = False
         if eval_options is not None:
             efficient_test = eval_options.get('efficient_test', False)
 
-        model = MMDataParallel(model, device_ids=[0])
-        outputs = single_gpu_test(model, data_loader, color_list_path,  out_dir=output,
-                                efficient_test=efficient_test)
-
-    
-    
-
-
-
-
+        # No MMDataParallel for CPU
+        outputs = single_gpu_test(model, data_loader, color_list_path, out_dir=output, efficient_test=efficient_test)

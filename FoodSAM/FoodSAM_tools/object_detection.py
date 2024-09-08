@@ -18,6 +18,10 @@ from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
 from UNIDET.unidet.predictor import UnifiedVisualizationDemo
 from UNIDET.unidet.config import add_unidet_config
+from FoodSAM_tools.utils import convert_sync_batchnorm
+import torch
+torch.set_default_tensor_type('torch.FloatTensor')
+
 
 
 # constants
@@ -70,20 +74,26 @@ def setup_cfg(args):
     cfg.MODEL.RETINANET.SCORE_THRESH_TEST = args.confidence_threshold
     cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = args.confidence_threshold
     cfg.MODEL.PANOPTIC_FPN.COMBINE.INSTANCES_CONFIDENCE_THRESH = args.confidence_threshold
+    cfg.MODEL.DEVICE = 'cpu'
+
     cfg.freeze()
     return cfg
 
 
 
 def object_detect(args):
-    mp.set_start_method("spawn", force=True)
+    # mp.set_start_method("spawn", force=True)
     logger = logging.getLogger()
 
     cfg = setup_cfg(args)
 
     demo = UnifiedVisualizationDemo(cfg)
-    
+    demo.predictor.model = convert_sync_batchnorm(demo.predictor.model)
+    for param in demo.predictor.model.parameters():
+        param.data = param.data.cpu()
     # test_one_img
+    demo.predictor.model.eval()
+
     if args.img_path:
        img_path = [args.img_path]
 
