@@ -19,6 +19,8 @@ import torch
 from mmcv.cnn import ConvModule
 from mmcv.utils.parrots_wrapper import SyncBatchNorm
 from FoodSAM_tools.utils import convert_sync_batchnorm
+from FoodSAM_tools.crop_segments import process_semantic_results
+
   # This will force CPU usage
 
 parser = argparse.ArgumentParser(
@@ -117,6 +119,9 @@ parser.add_argument(
     "--eval",
     action='store_true', help='evaluate the semantic results'
 )
+parser.add_argument(
+    "--crop_segments", 
+    action='store_true', help='Crop and save individual segments after semantic prediction')
 
 amg_settings = parser.add_argument_group("AMG Settings")
 amg_settings.add_argument(
@@ -308,6 +313,11 @@ def main(args: argparse.Namespace) -> None:
     
     logger.info("running semantic seg model!")
     semantic_predict(args.data_root, args.img_dir, args.ann_dir, args.semantic_config, args.options, args.aug_test, args.semantic_checkpoint, args.eval_options, args.output, args.color_list_path, args.img_path)
+    if args.crop_segments:
+        if args.img_path:
+            process_semantic_results(os.path.join(args.output, os.path.basename(args.img_path).split('.')[0]))
+        else:
+            process_semantic_results(args.output)
     logger.info("semantic predict done!\n")
     
 

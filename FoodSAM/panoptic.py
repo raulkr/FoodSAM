@@ -16,6 +16,8 @@ from FoodSAM_tools.panoramic_segment import panoramic_segment
 from FoodSAM_tools.object_detection import object_detect
 from FoodSAM_tools.predict_semantic_mask import semantic_predict
 import torch
+from FoodSAM_tools.crop_segments import process_semantic_results
+
 torch.cuda.is_available = lambda : False
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 torch.set_default_tensor_type('torch.FloatTensor')
@@ -129,6 +131,8 @@ parser.add_argument(
     default=["MODEL.WEIGHTS", "ckpts/Unified_learned_OCIM_RS200_6x+2x.pth"] ,
     nargs=argparse.REMAINDER,
 )
+
+parser.add_argument('--crop_segments', action='store_true', help='Crop and save individual segments after semantic prediction')
 
 amg_settings = parser.add_argument_group("AMG Settings")
 amg_settings.add_argument(
@@ -320,6 +324,11 @@ def main(args: argparse.Namespace) -> None:
 
     logger.info("running semantic seg model!")
     semantic_predict(args.data_root, args.img_dir, args.ann_dir, args.semantic_config, args.options, args.aug_test, args.semantic_checkpoint, args.eval_options, args.output, args.color_list_path, args.img_path)
+    if args.crop_segments:
+        if args.img_path:
+            process_semantic_results(os.path.join(args.output, os.path.basename(args.img_path).split('.')[0]))
+        else:
+            process_semantic_results(args.output)
     logger.info("semantic predict done!\n")
 
     logger.info("running object detection model")

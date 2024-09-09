@@ -72,7 +72,30 @@ def visualization_save(mask, save_path, img_path, color_list):
     vis = cv2.addWeighted(image, 0.5, result, 0.5, 0) 
     cv2.imwrite(save_path, vis)
 
-
+def create_boundary_image(enhanced_mask_path, original_image_path):
+    # Read the enhanced mask
+    enhanced_mask = cv2.imread(enhanced_mask_path, cv2.IMREAD_GRAYSCALE)
+    
+    # Read the original image
+    original_image = cv2.imread(original_image_path)
+    
+    # Apply Canny edge detection
+    edges = cv2.Canny(enhanced_mask, 50, 150)
+    
+    # Dilate the edges to make them more visible
+    kernel = np.ones((3,3), np.uint8)
+    dilated_edges = cv2.dilate(edges, kernel, iterations=1)
+    
+    # Find contours
+    contours, _ = cv2.findContours(dilated_edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Create a copy of the original image
+    boundary_image = original_image.copy()
+    
+    # Draw all contours
+    cv2.drawContours(boundary_image, contours, -1, (0, 255, 0), 2)
+    
+    return boundary_image
 
 def enhance_masks(data_folder, category_txt, color_list_path, num_class=104, area_thr=0, ratio_thr=0.5, top_k=80,
                   masks_path_name="sam_mask/masks.npy",
@@ -80,20 +103,27 @@ def enhance_masks(data_folder, category_txt, color_list_path, num_class=104, are
                   pred_mask_file_name="pred_mask.png",
                   enhance_mask_name='enhance_mask.png',
                   enhance_mask_vis_name='enhance_vis.png',
+                  boundary_mask_name='boundary_vis.png',
                   sam_mask_label_file_dir='sam_mask_label'):
         
     predict_sam_label([data_folder], category_txt, masks_path_name, new_mask_label_file_name, pred_mask_file_name, sam_mask_label_file_dir)
     color_list = np.load(color_list_path)
     color_list[0] = [238, 239, 20]
     for img_folder in os.listdir(data_folder):
-        if img_folder == 'sam_process.log':
-            continue
+        if img_folder.startswith('.') or not os.path.isdir(os.path.join(data_folder, img_folder)):
+            continue  # Skip hidden files and non-directories
+        
         category_info_path = os.path.join(data_folder, img_folder, sam_mask_label_file_dir, new_mask_label_file_name)
         sam_mask_folder = os.path.join(data_folder, img_folder)
         pred_mask_path = os.path.join(data_folder, img_folder, pred_mask_file_name)
         img_path = os.path.join(data_folder, img_folder, 'input.jpg')
+        
+        if not os.path.exists(pred_mask_path) or not os.path.exists(img_path):
+            print(f"Skipping {img_folder}: Required files not found.")
+            continue
+        
         save_dir = os.path.join(data_folder, img_folder)
-           # Check if save_dir is a file, and if so, create a unique directory name
+        # Check if save_dir is a file, and if so, create a unique directory name
         suffix = 1
         while os.path.isfile(save_dir):
             save_dir = os.path.join(data_folder, f"{img_folder}_enhanced_{suffix}")
@@ -101,30 +131,56 @@ def enhance_masks(data_folder, category_txt, color_list_path, num_class=104, are
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, enhance_mask_name)
         vis_save_path = os.path.join(save_dir, enhance_mask_vis_name)
+        boundary_save_path = os.path.join(save_dir, boundary_mask_name)
 
-        pred_mask = cv2.imread(pred_mask_path)[:,:,2]
-        f = open(category_info_path, 'r')
-        category_info = f.readlines()[1:]
+        pred_mask = cv2.imread(pred_mask_path)
+        if pred_mask is None:
+            print(f"Failed to read pred_mask for {img_folder}. Skipping.")
+            continue
+        pred_mask = pred_mask[:,:,2]
+
+        if not os.path.exists(category_info_path):
+            print(f"Category info file not found for {img_folder}. Skipping.")
+            continue
+        
+        with open(category_info_path, 'r') as f:
+            category_info = f.readlines()[1:]
+        
         category_area = np.zeros((num_class,))
-        f.close()
         for info in category_info:
-            label, area = int(info.split(',')[1]), float(info.split(',')[4])
+            parts = info.split(',')
+            if len(parts) < 5:
+                continue  # Skip malformed lines
+            label, area = int(parts[1]), float(parts[4])
             category_area[label] += area
 
-        category_info = sorted(category_info, key=lambda x:float(x.split(',')[4]), reverse=True)
+        category_info = sorted(category_info, key=lambda x: float(x.split(',')[4]) if len(x.split(',')) > 4 else 0, reverse=True)
         category_info = category_info[:top_k]
         
         enhanced_mask = pred_mask
         
-        sam_masks = np.load(os.path.join(sam_mask_folder, masks_path_name))
+        sam_masks_path = os.path.join(sam_mask_folder, masks_path_name)
+        if not os.path.exists(sam_masks_path):
+            print(f"SAM masks not found for {img_folder}. Skipping.")
+            continue
+        
+        sam_masks = np.load(sam_masks_path)
         for info in category_info:
-            idx, label, count_ratio, area = info.split(',')[0], int(info.split(',')[1]), float(info.split(',')[3]), float(info.split(',')[4])
-            if area < area_thr:
+            parts = info.split(',')
+            if len(parts) < 5:
+                continue  # Skip malformed lines
+            idx, label, count_ratio, area = int(parts[0]), int(parts[1]), float(parts[3]), float(parts[4])
+            if area < area_thr or count_ratio < ratio_thr:
                 continue
-            if count_ratio < ratio_thr:
-                continue
-            sam_mask = sam_masks[int(idx)].astype(bool)
-            assert (sam_mask.sum()/ (sam_mask.shape[0] * sam_mask.shape[1]) - area) < 1e-4
+            sam_mask = sam_masks[idx].astype(bool)
+            assert (sam_mask.sum() / (sam_mask.shape[0] * sam_mask.shape[1]) - area) < 1e-4
             enhanced_mask[sam_mask] = label
+        
         cv2.imwrite(save_path, enhanced_mask)
         visualization_save(enhanced_mask, vis_save_path, img_path, color_list)
+        
+        # Create and save the boundary image using the enhanced mask
+        boundary_image = create_boundary_image(save_path, img_path)
+        cv2.imwrite(boundary_save_path, boundary_image)
+
+    print("Enhance masks process completed.")
